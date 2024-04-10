@@ -1,4 +1,6 @@
-interface product{
+import { Document } from "mongoose"
+
+interface product extends Document{
     name: string,
     price: number,
     category: string,
