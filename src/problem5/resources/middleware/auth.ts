@@ -8,8 +8,12 @@ function authenToken(req: Request, res: Response, next: NextFunction) {
         ?.replace("Bearer ", "");
     if (!token) return res.status(401).json('Token is not empty');
     jwt.verify(token, 'nguyenthienthanh', (err, data) => {
-        if (err) return res.status(403).json(err);
-        else return next();
+        if (err) {
+            return res.status(403).json(err)
+        }
+        else {
+            return next();
+        }
     });
 }
 
