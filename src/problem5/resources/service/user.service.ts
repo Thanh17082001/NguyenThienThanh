@@ -2,6 +2,7 @@
 import { userModel } from "../model/user.model";
 import user from "../interface/user.interface";
 import mongoose from "mongoose";
+import { productModel } from "../model/product.model";
 
 
 
@@ -10,9 +11,13 @@ const create = async (data: user) => {
 };
 
 
-const find = async (condition: object = {}, pageNumber: number = 1, pageSize: number = 6, sort: {
+const find = async (condition: object = {}, pageNumber: number = 0, pageSize: number = 0, sort: {
     [field: string]: 1 | -1
 } = { createdAt: -1 }): Promise<user[]> => {
+
+    if (pageNumber == 0 && pageSize == 0) {
+        return await productModel.find().lean()
+    }
     const skip = (Number(pageNumber) - 1) * Number(pageSize);
     return await userModel
       .find(condition)

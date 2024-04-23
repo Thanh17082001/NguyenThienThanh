@@ -11,6 +11,7 @@ import product from "../interface/product.interface";
 import { validate } from "class-validator";
 import { plainToClass } from "class-transformer";
 import mongoose from "mongoose";
+import xlsx from "xlsx"
 
 //[POST] '/product/create' create product
 const createProduct = async (req: Request, res: Response) => {
@@ -115,25 +116,72 @@ const filtersProduct = async (req: Request, res: Response) => {
             ...req.query
         }
         type data = {
-          pageNumber: number;
-          pageSize: number;
+            pageNumber: number;
+            pageSize: number;
         };
         const pagination: data = {
-          pageNumber: Number(req.query.pageNumber),
-          pageSize: Number(req.query.pageSize),
+            pageNumber: Number(req.query.pageNumber),
+            pageSize: Number(req.query.pageSize),
         };
         const result: product[] = await find(filter, pagination.pageNumber, pagination.pageSize)
         res.status(200).json(result)
     } catch (error) {
         res.status(500).json(error);
-        
+
+    }
+}
+
+const readFile = async (req: Request, res: Response) => {
+    try {
+        if (!!!req.file) {
+            return res.status(401).json({ mes: 'file is valid' })
+        }
+
+        const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const data: Array<product> = xlsx.utils.sheet_to_json(sheet, {
+            range: 2,
+        });
+
+        if (!!!data) {
+            return res.status(400).json({ mes: 'File is not empty' })
+        }
+
+        let products: Array<product> = []
+        const productsExist = await find();
+        // chưa xử lý trùng nhau
+
+        // products = data.map((element): product => {
+        //     return <product>{
+        //       name: element.name,
+        //       quantity: element.quantity,
+        //       category: element.category,
+        //       price: element.price,
+        //     };
+        // })
+
+        // xử lý trùng tên và loại sản phẩm
+        products = data.filter((product) => {
+            return !productsExist.some((item) => {
+                return (
+                    item.name === product.name &&
+                    item.category === product.category
+                );
+            });
+        });
+        await create(products)
+        res.status(200).json({ mes: 'Import file successfully' })
+    } catch (error) {
+        res.status(500).json(error);
     }
 }
 
 export {
-  createProduct,
-  getAll,
-  updateProductById,
-  deleteProduct,
-  filtersProduct,
+    createProduct,
+    getAll,
+    updateProductById,
+    deleteProduct,
+    filtersProduct,
+    readFile
 };
