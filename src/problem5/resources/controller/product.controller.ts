@@ -171,6 +171,7 @@ const readFile = async (req: Request, res: Response) => {
             });
         });
         await create(products)
+        console.log(products);
         res.status(200).json({ mes: 'Import file successfully' })
     } catch (error) {
         res.status(500).json(error);
